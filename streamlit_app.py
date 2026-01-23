@@ -13,51 +13,87 @@ st.set_page_config(
 
 # 2. CUSTOM CSS  ---
 st.markdown("""
-    <style>
-        
-        /* Sidebar padding control */
-        section[data-testid="stSidebar"] > div {
-            padding-bottom: 0.5rem !important;
-        }
+<style>
 
-        /* Widget spacing */
-        div[data-testid="stVerticalBlock"] {
-            gap: 0.6rem !important;
-        }
+/* ---------------- CORE LAYOUT SAFETY FIX ---------------- */
 
-        /* Compact multiselect */
-        div[data-baseweb="select"] {
-            min-height: 36px !important;
-        }
-            
-        /* Compact chips */
-        span[data-baseweb="tag"] {
-            padding: 3px 8px !important;
-            font-size: 0.8rem !important;
-        }
+/* Prevent top content clipping */
+.block-container {
+    padding-top: 4.5rem !important;
+    padding-bottom: 2rem !important;
+}
 
-        /* Divider spacing */
-        hr {
-            margin: 0.6rem 0 !important;
-        }
+/* ---------------- SIDEBAR SPACING ---------------- */
 
+section[data-testid="stSidebar"] > div {
+    padding-bottom: 0.8rem !important;
+}
 
-        .block-container {padding-top: 1rem; padding-bottom: 2rem;}
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        /* Metric Value Text Size */
-        [data-testid="stMetricValue"] {font-size: 1.8rem !important;}
-        
-        /* Card Styling: Uses Streamlit's theme variables */
-        div[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            background-color: var(--secondary-background-color); /* Adapts to Dark Mode automatically */
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-    </style>
+/* ---------------- WIDGET COMPACTNESS ---------------- */
+
+/* Vertical spacing between widgets */
+div[data-testid="stVerticalBlock"] {
+    gap: 0.7rem !important;
+}
+
+/* Compact multiselect height */
+div[data-baseweb="select"] {
+    min-height: 38px !important;
+}
+
+/* Compact tag/chip styling */
+span[data-baseweb="tag"] {
+    padding: 4px 9px !important;
+    font-size: 0.8rem !important;
+}
+
+/* ---------------- DIVIDER CONTROL ---------------- */
+
+hr {
+    margin: 0.7rem 0 !important;
+}
+
+/* ---------------- STREAMLIT UI CLEANUP ---------------- */
+
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+/* ---------------- METRIC STYLING ---------------- */
+
+[data-testid="stMetricValue"] {
+    font-size: 1.9rem !important;
+    font-weight: 600;
+}
+
+/* ---------------- KPI CARD STYLE ---------------- */
+
+/* Card container effect */
+div[data-testid="stVerticalBlock"] > 
+div[style*="flex-direction: column;"] > 
+div[data-testid="stVerticalBlock"] {
+
+    border: 1px solid rgba(130, 130, 130, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    background-color: var(--secondary-background-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* ---------------- RESPONSIVE SAFETY ---------------- */
+
+/* Mobile safety */
+@media (max-width: 768px) {
+    .block-container {
+        padding-top: 5rem !important;
+    }
+}
+
+</style>
 """, unsafe_allow_html=True)
 
 # 3. CONNECTION & DATA LOADING ---
