@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 import time
 
-# --- 1. PREMIUM PAGE CONFIGURATION ---
+# 1. PREMIUM PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="HealthSync Enterprise",
     page_icon="⚡",
@@ -11,8 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CUSTOM CSS FOR INDUSTRY LOOK (THEME AWARE) ---
-# Updated to use CSS variables (var(--...)) so it adapts to Dark/Light mode automatically
+# 2. CUSTOM CSS  ---
 st.markdown("""
     <style>
         .block-container {padding-top: 1rem; padding-bottom: 2rem;}
@@ -33,25 +32,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONNECTION & DATA LOADING ---
-@st.cache_data(ttl=600) # Cache data for 10 mins to save Snowflake credits
+# 3. CONNECTION & DATA LOADING ---
+@st.cache_data(ttl=600) 
 def load_data():
     try:
         conn = st.connection("snowflake")
-        # specific query to fetch data
         df = conn.query("SELECT * FROM HEALTH_INVENTORY_DB.PUBLIC.INVENTORY_HEALTH_METRICS", ttl=0)
         return df
     except Exception as e:
         st.error(f"Connection Error: {e}")
-        return pd.DataFrame() # Return empty if fails
-
+        return pd.DataFrame() 
 df_raw = load_data()
 
 if df_raw.empty:
     st.warning("No data found or connection failed. Please check your Snowflake credentials.")
     st.stop()
 
-# --- 4. SIDEBAR (FILTERS) ---
+# 4. SIDEBAR (FILTERS) ---
 with st.sidebar:
     st.header("HealthSync")
     st.caption("Inventory Intelligence System")
@@ -77,15 +74,13 @@ df = df_raw[
     (df_raw['STATUS'].isin(selected_status))
 ]
 
-# --- 5. DASHBOARD HEADER & KPI CARDS ---
+# 5. DASHBOARD HEADER & KPI CARDS ---
 st.title("Inventory Command Center")
 st.markdown("Real-time visibility into supply chain operations.")
 
-# KPIs with a clean layout
-# UPDATED: Added Location count as the first column
 col1, col2, col3, col4 = st.columns(4)
 
-total_locations = df['LOCATION_ID'].nunique() # Calculate unique locations
+total_locations = df['LOCATION_ID'].nunique()
 total_skus = len(df)
 critical_count = len(df[df['STATUS'].str.contains('CRITICAL')])
 warning_count = len(df[df['STATUS'].str.contains('WARNING')])
@@ -102,16 +97,14 @@ with col4:
 
 st.markdown("---")
 
-# --- 6. MAIN ANALYTICS TABS ---
+# 6. MAIN ANALYTICS TABS ---
 tab1, tab2, tab3 = st.tabs(["Overview & Heatmap", "Risk Analysis", "Procurement Desk"])
 
-# === TAB 1: VISUAL OVERVIEW ===
+# TAB 1: VISUAL OVERVIEW ===
 with tab1:
     st.subheader("Network Stock Distribution")
     
     if not df.empty:
-        # Clean, Professional Heatmap
-        # Updated stroke color to be subtle in both dark/light modes
         heatmap = alt.Chart(df).mark_rect(stroke='gray', strokeWidth=0.5).encode(
             x=alt.X('LOCATION_ID', title=None, axis=alt.Axis(labelAngle=0)),
             y=alt.Y('ITEM_NAME', title=None),
@@ -132,16 +125,14 @@ with tab1:
     else:
         st.info("Select filters to view data.")
 
-# === TAB 2: ANALYTICS ===
+# TAB 2: ANALYTICS ===
 with tab2:
     c1, c2 = st.columns([2, 1])
     
     with c1:
         st.markdown("##### Stock Coverage by Item (Top Risks)")
-        # Sort by most critical
         risk_df = df.sort_values('DAYS_REMAINING').head(10)
         
-        # Horizontal Bar Chart for readability
         bars = alt.Chart(risk_df).mark_bar(cornerRadius=3).encode(
             x=alt.X('DAYS_REMAINING', title='Days Remaining'),
             y=alt.Y('ITEM_NAME', sort='x', title=None),
@@ -168,17 +159,15 @@ with tab2:
         ).properties(height=350)
         st.altair_chart(donut, use_container_width=True)
 
-# === TAB 3: ACTION DESK (SaaS Style Table) ===
+# TAB 3: ACTION DESK (SaaS Style Table) ===
 with tab3:
     col_header, col_btn = st.columns([4, 1])
     with col_header:
         st.subheader("Procurement Reorder List")
     with col_btn:
-        # Download Logic
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("📥 Export CSV", data=csv, file_name="procurement_list.csv", mime="text/csv", type="primary")
 
-    # Filter for non-good items for the priority list
     action_df = df[df['STATUS'] != 'GOOD'][['LOCATION_ID', 'ITEM_NAME', 'CURRENT_STOCK', 'DAYS_REMAINING', 'SUGGESTED_REORDER_QTY', 'STATUS']]
     
     if not action_df.empty:
