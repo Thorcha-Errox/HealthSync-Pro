@@ -14,6 +14,35 @@ st.set_page_config(
 # 2. CUSTOM CSS  ---
 st.markdown("""
     <style>
+        
+        /* Sidebar padding control */
+        section[data-testid="stSidebar"] > div {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+
+        /* Widget spacing */
+        div[data-testid="stVerticalBlock"] {
+            gap: 0.6rem !important;
+        }
+
+        /* Compact multiselect */
+        div[data-baseweb="select"] {
+            min-height: 36px !important;
+        }
+
+        /* Compact chips */
+        span[data-baseweb="tag"] {
+            padding: 3px 8px !important;
+            font-size: 0.8rem !important;
+        }
+
+        /* Divider spacing */
+        hr {
+            margin: 0.6rem 0 !important;
+        }
+
+
         .block-container {padding-top: 1rem; padding-bottom: 2rem;}
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
