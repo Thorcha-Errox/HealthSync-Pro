@@ -1,159 +1,205 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import time
 
-# --- 1. PAGE CONFIGURATION ---
+# --- 1. PREMIUM PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="HealthSync Pro | Inventory Command",
-    page_icon="🏥",
+    page_title="HealthSync Enterprise",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 2. DATA LOADING & CACHING (Updated for External Connection) ---
-@st.cache_data
-def load_data():
-    # USES st.connection instead of get_active_session()
-    conn = st.connection("snowflake")
-    
-    # Query the table directly
-    query = "SELECT * FROM HEALTH_INVENTORY_DB.PUBLIC.INVENTORY_HEALTH_METRICS"
-    df_snow = conn.query(query)
-    
-    return df_snow
+# --- 2. CUSTOM CSS FOR INDUSTRY LOOK ---
+# This hides the default Streamlit footer and adjusts font sizes for a cleaner look
+st.markdown("""
+    <style>
+        .block-container {padding-top: 1rem; padding-bottom: 2rem;}
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        [data-testid="stMetricValue"] {font-size: 1.8rem !important;}
+        div[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
+            border: 1px solid #f0f2f6;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-try:
-    df_raw = load_data()
-except Exception as e:
-    st.error("⚠️ Could not connect to Snowflake.")
-    st.info("Ensure your secrets.toml or Streamlit Cloud Secrets are configured correctly.")
+# --- 3. CONNECTION & DATA LOADING ---
+@st.cache_data(ttl=600) # Cache data for 10 mins to save Snowflake credits
+def load_data():
+    try:
+        conn = st.connection("snowflake")
+        # specific query to fetch data
+        df = conn.query("SELECT * FROM HEALTH_INVENTORY_DB.PUBLIC.INVENTORY_HEALTH_METRICS", ttl=0)
+        return df
+    except Exception as e:
+        st.error(f"Connection Error: {e}")
+        return pd.DataFrame() # Return empty if fails
+
+df_raw = load_data()
+
+if df_raw.empty:
+    st.warning("No data found or connection failed. Please check your Snowflake credentials.")
     st.stop()
 
-# --- 3. SIDEBAR CONTROLS ---
+# --- 4. SIDEBAR (FILTERS) ---
 with st.sidebar:
-    st.title("🏥 HealthSync Pro")
+    st.header("HealthSync")
+    st.caption("Inventory Intelligence System")
     st.markdown("---")
     
-    st.subheader("🔎 Filter View")
+    # 1. Location Filter
+    locations = sorted(df_raw['LOCATION_ID'].unique())
+    selected_loc = st.multiselect("Location", locations, default=locations)
     
-    # Filter 1: Location
-    all_locations = sorted(df_raw['LOCATION_ID'].unique())
-    selected_locations = st.multiselect("Select Locations", all_locations, default=all_locations)
-    
-    # Filter 2: Status
-    all_statuses = sorted(df_raw['STATUS'].unique())
-    selected_statuses = st.multiselect("Filter by Status", all_statuses, default=all_statuses)
-    
-    st.markdown("---")
-    st.caption("Last Refreshed: Just now")
-    if st.button("🔄 Refresh Data"):
-        st.cache_data.clear()
-        st.rerun() # Updated from experimental_rerun
+    # 2. Status Filter
+    statuses = sorted(df_raw['STATUS'].unique())
+    selected_status = st.multiselect("Stock Status", statuses, default=statuses)
 
-# --- 4. DATA FILTERING LOGIC ---
-df_filtered = df_raw[
-    (df_raw['LOCATION_ID'].isin(selected_locations)) & 
-    (df_raw['STATUS'].isin(selected_statuses))
+    st.markdown("---")
+    st.caption("System Status: Online")
+    if st.button("Refresh Data", type="secondary"):
+        st.cache_data.clear()
+        st.rerun()
+
+# Apply Filters
+df = df_raw[
+    (df_raw['LOCATION_ID'].isin(selected_loc)) & 
+    (df_raw['STATUS'].isin(selected_status))
 ]
 
-# --- 5. TOP LEVEL METRICS (KPIs) ---
-st.markdown("### 📊 Operational Overview")
+# --- 5. DASHBOARD HEADER & KPI CARDS ---
+st.title("Inventory Command Center")
+st.markdown("Real-time visibility into supply chain operations.")
+
+# KPIs with a clean layout
 col1, col2, col3, col4 = st.columns(4)
 
-total_items = len(df_filtered)
-critical_items = len(df_filtered[df_filtered['STATUS'] == 'CRITICAL (Stockout Risk)'])
-warning_items = len(df_filtered[df_filtered['STATUS'] == 'WARNING (Reorder Soon)'])
-avg_coverage = round(df_filtered['DAYS_REMAINING'].replace(999, 0).mean(), 1)
+total_skus = len(df)
+critical_count = len(df[df['STATUS'].str.contains('CRITICAL')])
+warning_count = len(df[df['STATUS'].str.contains('WARNING')])
+low_stock_pct = round(((critical_count + warning_count) / total_skus) * 100, 1) if total_skus > 0 else 0
 
-col1.metric("📦 Total SKUs Tracking", total_items)
-col2.metric("🚨 Critical Alerts", critical_items, delta="-Action Needed" if critical_items > 0 else "All Good", delta_color="inverse")
-col3.metric("⚠️ Reorder Warnings", warning_items, delta_color="off")
-col4.metric("📅 Avg Stock Coverage", f"{avg_coverage} Days")
+with col1:
+    st.metric(label="Total SKUs Monitored", value=total_skus)
+with col2:
+    st.metric(label="Critical Stockouts", value=critical_count, delta="-Urgent" if critical_count > 0 else "Stable", delta_color="inverse")
+with col3:
+    st.metric(label="Approaching Low", value=warning_count, delta="Monitor", delta_color="off")
+with col4:
+    st.metric(label="Risk Ratio", value=f"{low_stock_pct}%", help="Percentage of inventory requiring attention")
 
 st.markdown("---")
 
-# --- 6. MAIN TABS INTERFACE ---
-tab_overview, tab_analysis, tab_action = st.tabs(["🌍 Global Heatmap", "📈 Risk Analysis", "📋 Procurement Desk"])
+# --- 6. MAIN ANALYTICS TABS ---
+tab1, tab2, tab3 = st.tabs(["Overview & Heatmap", "Risk Analysis", "Procurement Desk"])
 
-# === TAB 1: INTERACTIVE HEATMAP ===
-with tab_overview:
-    st.subheader("📍 Network-Wide Stock Health")
+# === TAB 1: VISUAL OVERVIEW ===
+with tab1:
+    st.subheader("Network Stock Distribution")
     
-    if not df_filtered.empty:
-        heatmap = alt.Chart(df_filtered).mark_rect().encode(
-            x=alt.X('LOCATION_ID', title='Location', axis=alt.Axis(labelAngle=-45)),
-            y=alt.Y('ITEM_NAME', title='Item Name'),
-            color=alt.Color('DAYS_REMAINING', scale=alt.Scale(scheme='redyellowgreen', domain=[0, 30]), title='Days Left'),
-            tooltip=[
-                alt.Tooltip('LOCATION_ID', title='Location'),
-                alt.Tooltip('ITEM_NAME', title='Item'),
-                alt.Tooltip('CURRENT_STOCK', title='Stock Level'),
-                alt.Tooltip('DAYS_REMAINING', title='Days Left'),
-                alt.Tooltip('STATUS', title='Status')
-            ]
+    if not df.empty:
+        # Clean, Professional Heatmap
+        heatmap = alt.Chart(df).mark_rect(stroke='white', strokeWidth=1).encode(
+            x=alt.X('LOCATION_ID', title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y('ITEM_NAME', title=None),
+            color=alt.Color('DAYS_REMAINING', 
+                            scale=alt.Scale(scheme='redyellowgreen', domain=[0, 45]), 
+                            legend=alt.Legend(title="Days of Cover", orient="top")),
+            tooltip=['LOCATION_ID', 'ITEM_NAME', 'CURRENT_STOCK', 'STATUS']
         ).properties(
             height=400,
             width='container'
-        ).interactive()
-        
+        ).configure_axis(
+            grid=False,
+            domain=False
+        ).configure_view(
+            strokeWidth=0
+        )
         st.altair_chart(heatmap, use_container_width=True)
     else:
-        st.info("No data matches your filters.")
+        st.info("Select filters to view data.")
 
-# === TAB 2: RISK ANALYSIS CHARTS ===
-with tab_analysis:
-    col_a, col_b = st.columns(2)
+# === TAB 2: ANALYTICS ===
+with tab2:
+    c1, c2 = st.columns([2, 1])
     
-    with col_a:
-        st.markdown("**📉 Top 5 Items at Risk (Lowest Days Remaining)**")
-        risk_df = df_filtered.sort_values('DAYS_REMAINING').head(5)
+    with c1:
+        st.markdown("##### Stock Coverage by Item (Top Risks)")
+        # Sort by most critical
+        risk_df = df.sort_values('DAYS_REMAINING').head(10)
         
-        bar_chart = alt.Chart(risk_df).mark_bar().encode(
+        # Horizontal Bar Chart for readability
+        bars = alt.Chart(risk_df).mark_bar(cornerRadius=3).encode(
             x=alt.X('DAYS_REMAINING', title='Days Remaining'),
-            y=alt.Y('ITEM_NAME', sort='x', title=''),
-            color=alt.Color('STATUS', scale=alt.Scale(domain=['CRITICAL (Stockout Risk)', 'WARNING (Reorder Soon)', 'GOOD'], range=['#d62728', '#ff7f0e', '#2ca02c']))
-        )
-        st.altair_chart(bar_chart, use_container_width=True)
+            y=alt.Y('ITEM_NAME', sort='x', title=None),
+            color=alt.Color('STATUS', scale=alt.Scale(domain=['CRITICAL (Stockout Risk)', 'WARNING (Reorder Soon)', 'GOOD'], range=['#D32F2F', '#F57C00', '#388E3C']), legend=None),
+            tooltip=['LOCATION_ID', 'CURRENT_STOCK', 'AVG_DAILY_USAGE']
+        ).properties(height=350)
         
-    with col_b:
-        st.markdown("**🛒 Supply Velocity (Avg Daily Usage)**")
-        scatter = alt.Chart(df_filtered).mark_circle(size=100).encode(
-            x=alt.X('AVG_DAILY_USAGE', title='Daily Usage Rate'),
-            y=alt.Y('CURRENT_STOCK', title='Current Stock Level'),
-            color='STATUS',
-            tooltip=['ITEM_NAME', 'LOCATION_ID', 'AVG_DAILY_USAGE']
-        ).interactive()
-        st.altair_chart(scatter, use_container_width=True)
+        text = bars.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3 
+        ).encode(
+            text='DAYS_REMAINING'
+        )
+        
+        st.altair_chart(bars + text, use_container_width=True)
 
-# === TAB 3: PROCUREMENT DESK ===
-with tab_action:
-    st.subheader("📝 Procurement Orders")
-    action_df = df_filtered[df_filtered['STATUS'] != 'GOOD'].copy()
+    with c2:
+        st.markdown("##### Alert Distribution")
+        donut = alt.Chart(df).mark_arc(innerRadius=50).encode(
+            theta=alt.Theta("count()", stack=True),
+            color=alt.Color("STATUS", legend=alt.Legend(orient="bottom", columns=1)),
+            tooltip=["STATUS", "count()"]
+        ).properties(height=350)
+        st.altair_chart(donut, use_container_width=True)
+
+# === TAB 3: ACTION DESK (SaaS Style Table) ===
+with tab3:
+    col_header, col_btn = st.columns([4, 1])
+    with col_header:
+        st.subheader("Procurement Reorder List")
+    with col_btn:
+        # Download Logic
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Export CSV", data=csv, file_name="procurement_list.csv", mime="text/csv", type="primary")
+
+    # Filter for non-good items for the priority list
+    action_df = df[df['STATUS'] != 'GOOD'][['LOCATION_ID', 'ITEM_NAME', 'CURRENT_STOCK', 'DAYS_REMAINING', 'SUGGESTED_REORDER_QTY', 'STATUS']]
     
     if not action_df.empty:
         st.dataframe(
-            action_df[['LOCATION_ID', 'ITEM_NAME', 'CURRENT_STOCK', 'SUGGESTED_REORDER_QTY', 'STATUS', 'DAYS_REMAINING']],
+            action_df,
             column_config={
+                "LOCATION_ID": st.column_config.TextColumn("Location"),
+                "ITEM_NAME": st.column_config.TextColumn("Item Name", width="medium"),
                 "CURRENT_STOCK": st.column_config.ProgressColumn(
-                    "Stock Level",
+                    "Current Stock",
+                    help="Visual indicator of stock volume",
                     format="%d",
                     min_value=0,
-                    max_value=1000,
+                    max_value=1000, 
                 ),
-                "SUGGESTED_REORDER_QTY": st.column_config.NumberColumn("Reorder Qty", format="%d units"),
-                "STATUS": st.column_config.TextColumn("Risk Status")
+                "DAYS_REMAINING": st.column_config.NumberColumn(
+                    "Days Left",
+                    format="%.1f days"
+                ),
+                "SUGGESTED_REORDER_QTY": st.column_config.NumberColumn(
+                    "Reorder Qty",
+                    help="Recommended purchase amount",
+                    format="%d units"
+                ),
+                "STATUS": st.column_config.TextColumn("Risk Level"),
             },
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        csv = action_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download Approved PO List (CSV)",
-            data=csv,
-            file_name='procurement_orders.csv',
-            mime='text/csv',
-            type="primary"
+            hide_index=True,
+            use_container_width=True
         )
     else:
-        st.success("✅ No critical items found. Inventory is healthy!")
+        st.success("All inventory levels are healthy. No immediate actions required.")
