@@ -9,7 +9,7 @@
 ---
 
 ## 🔗 Live Demo
-**Experience the dashboard live here:** [👉 **Click to View HealthSync Deployed on Streamlit Cloud**](https://healthsync-pro.streamlit.app/)
+**Experience the dashboard live here:** [👉 **Click to View HealthSync-Pro**](https://healthsync-pro.streamlit.app/)
 *(Note: If the app is in sleep mode, please allow a moment for it to wake up.)*
 
 ---
@@ -65,7 +65,6 @@ Data is useless without action. The Procurement Desk automatically generates a *
 * **One-Click Export:** Download a CSV formatted for immediate use by procurement teams.
 
 ![Procurement Desk](assets/procurement_desk.png)
-
 ---
 
 ## ⚙️ How It Works (Architecture)
@@ -97,10 +96,10 @@ The system follows a modern **ELT (Extract, Load, Transform)** architecture enti
 
 ### Prerequisites
 * A Snowflake Account.
-* Python installed locally (for testing) or access to Streamlit in Snowflake.
+* Python installed locally or access to Streamlit in Snowflake.
 
 ### Step 1: Database Setup
-Run the `setup.sql` script (found in this repo) in a Snowflake Worksheet to create the necessary tables and dummy data.
+Run the `setup.sql` script in a Snowflake Worksheet to create the necessary tables and dummy data.
 
 ```sql
 -- 1. SETUP ENVIRONMENT
@@ -163,21 +162,22 @@ FROM BASE_DATA;
 3. Run the app locally: `streamlit run app.py`
 
 ### Future Roadmap & Improvements
-This project is currently a functional MVP (Minimum Viable Product). The following enhancements are planned to make it fully industry-ready:
+This project is currently a functional MVP. The following enhancements are planned to make it fully industry-ready:
 
 1. AI-Driven Demand Forecasting:
-    * **Current State:** Uses simple average daily usage (ADU).
+    * **Current State:** Uses simple average daily usage.
     * **Future:** Integrate Snowflake Cortex ML to predict seasonal demand spikes (e.g., Flu Season, Monsoon outbreaks) using historical regression models.
 
 2. Smart Notification Layer:
     * **Current State:** Passive dashboard alerts.
     * **Future:** Implement Snowflake External Functions to send automated SMS/WhatsApp alerts to field doctors immediately when stock hits critical levels.
 
-3. Role-Based Access Control (RBAC):
+3. Role-Based Access Control:
     * **Current State:** Global admin view.
     * **Future:** Separate login views for "Warehouse Managers" vs. "Procurement Officers".
 
 4. Offline-First Data Entry:
     * **Future:** Develop a lightweight mobile PWA for rural clinics with poor internet to log inventory, which syncs to Snowflake when connectivity is restored.
 
-Built with ❤️ for Empowering healthcare heroes with data.
+
+Built with ❤️ for Empowering healthcare industry with data.
