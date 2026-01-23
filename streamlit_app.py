@@ -30,9 +30,9 @@ st.markdown("""
         div[data-baseweb="select"] {
             min-height: 36px !important;
         }
-        section[data-testid="stAppViewContainer"] .block-container {
-        padding-top: 2.5rem !important;
-}
+        div[data-testid="stAppViewContainer"] {
+            padding-top: 4rem !important;
+        }
 
         /* Compact chips */
         span[data-baseweb="tag"] {
