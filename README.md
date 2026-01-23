@@ -8,6 +8,12 @@
 
 ---
 
+## 🔗 Live Demo
+**Experience the dashboard live here:** [👉 **Click to View HealthSync Deployed on Streamlit Cloud**](https://healthsync-pro.streamlit.app/)
+*(Note: If the app is in sleep mode, please allow a moment for it to wake up.)*
+
+---
+
 ## 📖 Table of Contents
 - [The Problem](#-the-problem)
 - [The Solution](#-the-solution)

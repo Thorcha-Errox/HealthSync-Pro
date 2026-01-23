@@ -6,7 +6,7 @@ import time
 # 1. PREMIUM PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="HealthSync Enterprise",
-    page_icon="⚡",
+    page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded"
 )
