@@ -97,7 +97,6 @@ The system follows a modern **ELT (Extract, Load, Transform)** architecture enti
 Run the `setup.sql` script (found in this repo) in a Snowflake Worksheet to create the necessary tables and dummy data.
 
 ```sql
--- Example command from setup.sql
 -- 1. SETUP ENVIRONMENT
 CREATE OR REPLACE DATABASE HEALTH_DB;
 CREATE OR REPLACE SCHEMA HEALTH_DB.PUBLIC;
@@ -150,4 +149,29 @@ SELECT
     END as STATUS,
     GREATEST(0, (AVG_DAILY_USAGE * 30) - CURRENT_STOCK) as SUGGESTED_REORDER_QTY
 FROM BASE_DATA;
-...
+```
+
+### Step 2: Streamlit Configuration
+1. Clone this repository.
+2. Set up your `streamlit/secrets.toml` with your Snowflake credentials.
+3. Run the app locally: `streamlit run app.py`
+
+### Future Roadmap & Improvements
+This project is currently a functional MVP (Minimum Viable Product). The following enhancements are planned to make it fully industry-ready:
+
+1. AI-Driven Demand Forecasting:
+    * **Current State:** Uses simple average daily usage (ADU).
+    * **Future:** Integrate Snowflake Cortex ML to predict seasonal demand spikes (e.g., Flu Season, Monsoon outbreaks) using historical regression models.
+
+2. Smart Notification Layer:
+    * **Current State:** Passive dashboard alerts.
+    * **Future:** Implement Snowflake External Functions to send automated SMS/WhatsApp alerts to field doctors immediately when stock hits critical levels.
+
+3. Role-Based Access Control (RBAC):
+    * **Current State:** Global admin view.
+    * **Future:** Separate login views for "Warehouse Managers" vs. "Procurement Officers".
+
+4. Offline-First Data Entry:
+    * **Future:** Develop a lightweight mobile PWA for rural clinics with poor internet to log inventory, which syncs to Snowflake when connectivity is restored.
+
+Built with ❤️ for Empowering healthcare heroes with data.
