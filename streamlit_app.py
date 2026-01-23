@@ -11,19 +11,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CUSTOM CSS FOR INDUSTRY LOOK ---
-# This hides the default Streamlit footer and adjusts font sizes for a cleaner look
+# --- 2. CUSTOM CSS FOR INDUSTRY LOOK (THEME AWARE) ---
+# Updated to use CSS variables (var(--...)) so it adapts to Dark/Light mode automatically
 st.markdown("""
     <style>
         .block-container {padding-top: 1rem; padding-bottom: 2rem;}
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
+        
+        /* Metric Value Text Size */
         [data-testid="stMetricValue"] {font-size: 1.8rem !important;}
+        
+        /* Card Styling: Uses Streamlit's theme variables */
         div[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
-            border: 1px solid #f0f2f6;
+            border: 1px solid rgba(128, 128, 128, 0.2);
             border-radius: 10px;
             padding: 15px;
-            background-color: white;
+            background-color: var(--secondary-background-color); /* Adapts to Dark Mode automatically */
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
     </style>
@@ -78,21 +82,23 @@ st.title("Inventory Command Center")
 st.markdown("Real-time visibility into supply chain operations.")
 
 # KPIs with a clean layout
+# UPDATED: Added Location count as the first column
 col1, col2, col3, col4 = st.columns(4)
 
+total_locations = df['LOCATION_ID'].nunique() # Calculate unique locations
 total_skus = len(df)
 critical_count = len(df[df['STATUS'].str.contains('CRITICAL')])
 warning_count = len(df[df['STATUS'].str.contains('WARNING')])
 low_stock_pct = round(((critical_count + warning_count) / total_skus) * 100, 1) if total_skus > 0 else 0
 
 with col1:
-    st.metric(label="Total SKUs Monitored", value=total_skus)
+    st.metric(label="Active Locations", value=total_locations, help="Total facilities handled by inventory")
 with col2:
-    st.metric(label="Critical Stockouts", value=critical_count, delta="-Urgent" if critical_count > 0 else "Stable", delta_color="inverse")
+    st.metric(label="Total SKUs Monitored", value=total_skus)
 with col3:
-    st.metric(label="Approaching Low", value=warning_count, delta="Monitor", delta_color="off")
+    st.metric(label="Critical Stockouts", value=critical_count, delta="-Urgent" if critical_count > 0 else "Stable", delta_color="inverse")
 with col4:
-    st.metric(label="Risk Ratio", value=f"{low_stock_pct}%", help="Percentage of inventory requiring attention")
+    st.metric(label="Approaching Low", value=warning_count, delta="Monitor", delta_color="off")
 
 st.markdown("---")
 
@@ -105,7 +111,8 @@ with tab1:
     
     if not df.empty:
         # Clean, Professional Heatmap
-        heatmap = alt.Chart(df).mark_rect(stroke='white', strokeWidth=1).encode(
+        # Updated stroke color to be subtle in both dark/light modes
+        heatmap = alt.Chart(df).mark_rect(stroke='gray', strokeWidth=0.5).encode(
             x=alt.X('LOCATION_ID', title=None, axis=alt.Axis(labelAngle=0)),
             y=alt.Y('ITEM_NAME', title=None),
             color=alt.Color('DAYS_REMAINING', 
