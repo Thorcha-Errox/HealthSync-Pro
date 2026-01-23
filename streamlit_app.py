@@ -17,7 +17,6 @@ st.markdown("""
         
         /* Sidebar padding control */
         section[data-testid="stSidebar"] > div {
-            padding-top: 0.5rem !important;
             padding-bottom: 0.5rem !important;
         }
 
@@ -30,10 +29,7 @@ st.markdown("""
         div[data-baseweb="select"] {
             min-height: 36px !important;
         }
-        div[data-testid="stAppViewContainer"] {
-            padding-top: 4rem !important;
-        }
-
+            
         /* Compact chips */
         span[data-baseweb="tag"] {
             padding: 3px 8px !important;
