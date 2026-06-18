@@ -6,13 +6,11 @@
 [![Supabase](https://img.shields.io/badge/Built%20With-Supabase-3ECF8E?style=flat&logo=Supabase)](https://supabase.com/)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 
----
 
 ## 🔗 Live Demo
 **Experience the dashboard live here:** [👉 **Click to View HealthSync-Pro**](https://healthsync-pro.streamlit.app/)
 *(Note: If the app is in sleep mode, please allow a moment for it to wake up.)*
 
----
 
 ## 📖 Table of Contents
 - [The Problem](#-the-problem)
@@ -23,7 +21,6 @@
 - [Installation & Setup](#-installation--setup)
 - [Future Roadmap](#-future-roadmap)
 
----
 
 ## 🚨 The Problem
 In public health, a stock-out isn't just a logistical error; it is a patient denied critical care.
@@ -38,7 +35,6 @@ Hospitals and NGOs often struggle with:
 
 By ingesting daily stock logs into **Supabase (PostgreSQL)**, we use SQL views to automatically calculate burn rates, lead times, and critical thresholds. The data is visualized in a **Streamlit** dashboard that acts as a "Single Source of Truth," allowing procurement officers to spot risks across hundreds of locations instantly.
 
----
 
 ## 📸 Key Features & Screenshots
 
@@ -66,7 +62,6 @@ Data is useless without action. The Procurement Desk automatically generates a *
 
 ![Procurement Desk](assets/procurement_desk.png)
 
----
 
 ## ⚙️ How It Works (Architecture)
 
@@ -82,7 +77,6 @@ The system follows a modern **ELT (Extract, Load, Transform)** architecture buil
     * **Streamlit** queries the processed metrics via `st.connection("postgresql", type="sql")`.
     * The app uses **Altair** for rendering interactive charts and theme-aware CSS for a premium UI.
 
----
 
 ## 🛠 Technology Stack
 * **Database:** Supabase (PostgreSQL)
@@ -92,7 +86,6 @@ The system follows a modern **ELT (Extract, Load, Transform)** architecture buil
 * **DB Driver:** SQLAlchemy + psycopg2-binary
 * **Language:** Python 3.8+ & SQL
 
----
 
 ## 🚀 Installation & Setup
 
@@ -175,7 +168,6 @@ FROM base_data;
    python -m streamlit run streamlit_app.py
    ```
 
----
 
 ## 🔮 Future Roadmap
 This project is currently a functional MVP. The following enhancements are planned to make it fully industry-ready:
@@ -195,6 +187,5 @@ This project is currently a functional MVP. The following enhancements are plann
 4. **Offline-First Data Entry:**
     * **Future:** A lightweight mobile PWA for rural clinics with poor connectivity to log inventory, syncing to Supabase when online.
 
----
 
 Built with ❤️ for Empowering healthcare industry with data.
