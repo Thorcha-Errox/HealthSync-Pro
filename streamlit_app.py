@@ -100,8 +100,8 @@ div[data-testid="stVerticalBlock"] {
 @st.cache_data(ttl=600) 
 def load_data():
     try:
-        conn = st.connection("snowflake")
-        df = conn.query("SELECT * FROM HEALTH_INVENTORY_DB.PUBLIC.INVENTORY_HEALTH_METRICS", ttl=0)
+        conn = st.connection("postgresql", type="sql")
+        df = conn.query("SELECT * FROM inventory_health_metrics", ttl=0)
         return df
     except Exception as e:
         st.error(f"Connection Error: {e}")
@@ -109,7 +109,7 @@ def load_data():
 df_raw = load_data()
 
 if df_raw.empty:
-    st.warning("No data found or connection failed. Please check your Snowflake credentials.")
+    st.warning("No data found or connection failed. Please check your PostgreSQL credentials.")
     st.stop()
 
 # 4. SIDEBAR (FILTERS) ---
